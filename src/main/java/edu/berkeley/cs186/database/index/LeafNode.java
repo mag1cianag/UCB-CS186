@@ -148,7 +148,7 @@ class LeafNode extends BPlusNode {
     public LeafNode get(DataBox key) {
         // TODO(proj2): implement
 
-        return null;
+        return this;
     }
 
     // See BPlusNode.getLeftmostLeaf.
@@ -156,15 +156,38 @@ class LeafNode extends BPlusNode {
     public LeafNode getLeftmostLeaf() {
         // TODO(proj2): implement
 
-        return null;
+        return this;
     }
 
     // See BPlusNode.put.
     @Override
     public Optional<Pair<DataBox, Long>> put(DataBox key, RecordId rid) {
         // TODO(proj2): implement
+        if(keys.contains(key)) {
+            throw new BPlusTreeException("duplicate keys!");
+        }
 
-        return Optional.empty();
+        // insert
+        int index = InnerNode.numLessThan(key,keys);
+        keys.add(index,key);
+        rids.add(index,rid);
+
+        if(keys.size() <= 2* metadata.getOrder()) {
+            sync();
+            return Optional.empty();
+        }
+        else{
+            // return right side
+            List<DataBox> dataBoxes = keys.subList(metadata.getOrder(), keys.size());
+            List<RecordId> recordIds = rids.subList(metadata.getOrder(), keys.size());
+            keys = keys.subList(0,metadata.getOrder());
+            rids = rids.subList(0,metadata.getOrder());
+
+            LeafNode rs = new LeafNode(metadata, bufferManager, dataBoxes, recordIds, rightSibling, treeContext);
+            this.rightSibling = Optional.of(rs.getPage().getPageNum());
+            sync();
+            return Optional.of(new Pair<>(dataBoxes.get(0),rs.getPage().getPageNum()));
+        }
     }
 
     // See BPlusNode.bulkLoad.
@@ -180,8 +203,13 @@ class LeafNode extends BPlusNode {
     @Override
     public void remove(DataBox key) {
         // TODO(proj2): implement
-
-        return;
+        int index = keys.indexOf(key);
+        if(index < 0) {
+            return ;
+        }
+        keys.remove(index);
+        rids.remove(index);
+        sync();
     }
 
     // Iterators ///////////////////////////////////////////////////////////////
