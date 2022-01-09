@@ -138,7 +138,23 @@ class InnerNode extends BPlusNode {
                                                   float fillFactor) {
         // TODO(proj2): implement
 
-        return Optional.empty();
+        BPlusNode rightMostChild = getChild(children.size() - 1);
+        Optional<Pair<DataBox, Long>> backNode = rightMostChild.bulkLoad(data, fillFactor);
+        if (!backNode.isPresent()) {
+            // do not split
+            return backNode;
+        } else {
+            DataBox k = backNode.get().getFirst();
+            Long child = backNode.get().getSecond();
+            Optional<Pair<DataBox, Long>> info = insert(k, child);
+            if (!info.isPresent()) {
+                // still have data
+                return bulkLoad(data, fillFactor);
+            } else {
+                // this inner node should be split
+                return info;
+            }
+        }
     }
 
     // See BPlusNode.remove.
