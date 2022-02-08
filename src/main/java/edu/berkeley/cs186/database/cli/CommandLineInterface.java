@@ -172,7 +172,7 @@ public class CommandLineInterface {
         TransactionContext tc = TransactionContext.getTransaction();
         if (cmd.equals("d")) {
             if (tokens.length == 1) {
-                List<Record> records = db.scanTableMetadataRecords();
+                List<Record> records =  db.scanTableMetadataRecords();
                 new PrettyPrinter(out).printRecords(db.getTableInfoSchema().getFieldNames(),
                         records.iterator());
             } else if (tokens.length == 2) {
